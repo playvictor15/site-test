@@ -37,22 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveBtn').addEventListener('click', () => {
         const doc = new jsPDF();
 
-        // Obtém o conteúdo formatado do editor
-        const delta = quill.getContents();
-        const text = quill.getText();
+        // Obtém o conteúdo HTML do editor
+        const html = quill.root.innerHTML;
 
-        // Adiciona o texto ao PDF (neste caso, apenas texto sem formatação)
-        doc.text(text, 10, 10);
-
-        // Adiciona as imagens ao PDF
-        const images = document.querySelectorAll('#editor img');
-        images.forEach((img, index) => {
-            const imgProps = doc.getImageProperties(img.src);
-            doc.addImage(img.src, 'JPEG', 10, 20 + (index * (imgProps.height / imgProps.width * 50)), 50, imgProps.height / imgProps.width * 50);
+        // Adiciona o HTML ao PDF
+        doc.html(html, {
+            callback: function (doc) {
+                doc.save('documento.pdf');
+            },
+            x: 10,
+            y: 10,
+            html2canvas: {
+                scale: 0.5
+            }
         });
-
-        // Salva o PDF
-        doc.save('documento.pdf');
     });
 
     document.getElementById('uploadBtn').addEventListener('click', () => {
