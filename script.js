@@ -35,21 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('saveBtn').addEventListener('click', () => {
-        const doc = new jsPDF();
-
-        // Obtém o conteúdo HTML do editor
-        const html = quill.root.innerHTML;
-
-        // Adiciona o HTML ao PDF
-        doc.html(html, {
-            callback: function (doc) {
-                doc.save('documento.pdf');
-            },
-            x: 10,
-            y: 10,
-            html2canvas: {
-                scale: 0.5
-            }
+        html2canvas(document.querySelector('#editor')).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const doc = new jsPDF();
+            doc.addImage(imgData, 'PNG', 10, 10);
+            doc.save('documento.pdf');
         });
     });
 
