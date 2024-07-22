@@ -1,5 +1,5 @@
 window.addEventListener('DOMContentLoaded', () => {
-    const { jsPDF } = window.jspdf;
+    const jsPDF = window.jspdf.jsPDF;
 
     const toolbarOptions = [
         [{ 'font': [] }, { 'size': [] }],
