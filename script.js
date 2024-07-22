@@ -35,12 +35,18 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('saveBtn').addEventListener('click', () => {
-        html2canvas(document.querySelector('#editor')).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            const doc = new jsPDF();
-            doc.addImage(imgData, 'PNG', 10, 10);
-            doc.save('documento.pdf');
+        const doc = new jsPDF();
+        const content = quill.getText(); // Get plain text content from Quill
+        const lines = content.split('\n'); // Split content into lines
+
+        let y = 10; // Starting y position for text in PDF
+
+        lines.forEach(line => {
+            doc.text(line, 10, y); // Add text line by line
+            y += 10; // Move y position down for next line
         });
+
+        doc.save('documento.pdf');
     });
 
     document.getElementById('uploadBtn').addEventListener('click', () => {
