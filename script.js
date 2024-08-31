@@ -1,117 +1,55 @@
-// Carregar tarefas ao iniciar
-document.addEventListener('DOMContentLoaded', loadSchedules);
+// Registra o Service Worker diretamente pelo script
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker registrado'))
+        .catch(err => console.error('Erro ao registrar o Service Worker:', err));
+    
+    // Código do Service Worker embutido
+    navigator.serviceWorker.ready.then(registration => {
+        registration.active.postMessage('Service Worker ativo');
+    });
 
-function addSchedule() {
-    const taskName = document.getElementById('task').value.trim();
-    const taskTime = document.getElementById('time').value;
-
-    if (taskName === '' || taskTime === '') {
-        showAlert('Preencha todos os campos!', 'warning');
-        return;
-    }
-
-    const taskTimeDate = new Date(taskTime);
-    const now = new Date();
-
-    if (taskTimeDate <= now) {
-        showAlert('Defina um horário futuro!', 'warning');
-        return;
-    }
-
-    const task = {
-        id: Date.now(),
-        name: taskName,
-        time: taskTimeDate.toISOString(),
+    navigator.serviceWorker.onmessage = (event) => {
+        console.log('Mensagem do Service Worker:', event.data);
     };
-
-    saveSchedule(task);
-    displayTask(task);
-    showAlert('Tarefa adicionada com sucesso!', 'success');
 }
 
-function saveSchedule(task) {
-    const schedules = getSchedules();
-    schedules.push(task);
-    localStorage.setItem('schedules', JSON.stringify(schedules));
-}
+// Solicita permissão para notificações ao usuário
+Notification.requestPermission();
 
-function getSchedules() {
-    return JSON.parse(localStorage.getItem('schedules')) || [];
-}
+function setAlarme(horario, treino) {
+    const agora = new Date();
+    const [hora, minuto] = horario.split(':').map(Number);
+    const horarioAlarme = new Date();
+    horarioAlarme.setHours(hora, minuto, 0);
 
-function loadSchedules() {
-    const schedules = getSchedules();
-    schedules.forEach(displayTask);
-}
+    // Se o horário já passou hoje, configura para o próximo dia
+    if (horarioAlarme <= agora) {
+        horarioAlarme.setDate(horarioAlarme.getDate() + 1);
+    }
 
-function displayTask(task) {
-    const taskTimeDate = new Date(task.time);
+    const tempoAteAlarme = horarioAlarme - agora;
 
-    const taskItem = document.createElement('li');
-    taskItem.className = 'list-group-item animate__animated animate__fadeInUp';
-    taskItem.textContent = `${task.name} - ${taskTimeDate.toLocaleString()}`;
-
-    const editButton = document.createElement('button');
-    editButton.className = 'btn btn-warning btn-sm';
-    editButton.textContent = 'Editar';
-    editButton.onclick = () => editTask(task, taskItem);
-
-    const deleteButton = document.createElement('button');
-    deleteButton.className = 'btn btn-danger btn-sm';
-    deleteButton.textContent = 'Excluir';
-    deleteButton.onclick = () => deleteTask(task, taskItem);
-
-    taskItem.appendChild(editButton);
-    taskItem.appendChild(deleteButton);
-    document.getElementById('schedule-list').appendChild(taskItem);
-
-    setAlarm(task);
-}
-
-function editTask(task, taskItem) {
-    const newName = prompt('Edite o nome da tarefa:', task.name);
-    const newTime = prompt('Edite o horário da tarefa:', task.time);
-
-    if (!newName || !newTime) return;
-
-    task.name = newName;
-    task.time = new Date(newTime).toISOString();
-
-    const schedules = getSchedules().map(t => (t.id === task.id ? task : t));
-    localStorage.setItem('schedules', JSON.stringify(schedules));
-
-    taskItem.textContent = `${task.name} - ${new Date(task.time).toLocaleString()}`;
-    taskItem.appendChild(taskItem.querySelector('.btn-warning'));
-    taskItem.appendChild(taskItem.querySelector('.btn-danger'));
-}
-
-function deleteTask(task, taskItem) {
-    const schedules = getSchedules().filter(t => t.id !== task.id);
-    localStorage.setItem('schedules', JSON.stringify(schedules));
-    taskItem.remove();
-    showAlert('Tarefa excluída!', 'danger');
-}
-
-function setAlarm(task) {
-    const taskTimeDate = new Date(task.time);
-    const now = new Date();
-    const timeDifference = taskTimeDate - now;
-
+    // Configura o alarme para o tempo restante
     setTimeout(() => {
-        alert(`Hora de: ${task.name}`);
-        document.getElementById('alarm-sound').play();
-        showAlert(`Hora de: ${task.name}`, 'info');
-    }, timeDifference);
+        enviarNotificacao(treino);
+    }, tempoAteAlarme);
 }
 
-function showAlert(message, type) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} animate__animated animate__fadeInDown`;
-    alertDiv.textContent = message;
-    document.body.prepend(alertDiv);
-
-    setTimeout(() => {
-        alertDiv.classList.replace('animate__fadeInDown', 'animate__fadeOutUp');
-        alertDiv.addEventListener('animationend', () => alertDiv.remove());
-    }, 3000);
+function enviarNotificacao(treino) {
+    navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification('Hora do Treino!', {
+            body: `É hora de ${treino}!`,
+            icon: 'icone.png', // Adicione um ícone aqui, se quiser
+            vibrate: [200, 100, 200], // Vibração curta
+            data: { treino },
+        });
+    });
 }
+
+// Código do Service Worker incorporado para gerenciar notificações
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    // Exemplo de ação ao clicar na notificação, se desejado
+    console.log('Notificação clicada:', event.notification.data.treino);
+});
