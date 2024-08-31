@@ -3,19 +3,43 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log('Service Worker registrado'))
         .catch(err => console.error('Erro ao registrar o Service Worker:', err));
-    
-    // Código do Service Worker embutido
-    navigator.serviceWorker.ready.then(registration => {
-        registration.active.postMessage('Service Worker ativo');
-    });
-
-    navigator.serviceWorker.onmessage = (event) => {
-        console.log('Mensagem do Service Worker:', event.data);
-    };
 }
 
 // Solicita permissão para notificações ao usuário
 Notification.requestPermission();
+
+document.getElementById('form-treino').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    // Captura os valores do formulário
+    const dia = document.getElementById('dia').value;
+    const treino = document.getElementById('treino').value;
+    const horario = document.getElementById('horario').value;
+
+    // Adiciona o treino à tabela
+    adicionarTreino(dia, treino, horario);
+});
+
+function adicionarTreino(dia, treino, horario) {
+    const tabela = document.getElementById('cronograma').getElementsByTagName('tbody')[0];
+    const novaLinha = tabela.insertRow();
+
+    // Insere as células na linha
+    const celulaDia = novaLinha.insertCell(0);
+    const celulaTreino = novaLinha.insertCell(1);
+    const celulaHorario = novaLinha.insertCell(2);
+    const celulaAlarme = novaLinha.insertCell(3);
+
+    celulaDia.textContent = dia;
+    celulaTreino.textContent = treino;
+    celulaHorario.textContent = horario;
+    
+    // Botão para ativar o alarme
+    const botaoAlarme = document.createElement('button');
+    botaoAlarme.textContent = 'Ativar Alarme';
+    botaoAlarme.onclick = () => setAlarme(horario, treino);
+    celulaAlarme.appendChild(botaoAlarme);
+}
 
 function setAlarme(horario, treino) {
     const agora = new Date();
@@ -42,7 +66,6 @@ function enviarNotificacao(treino) {
             body: `É hora de ${treino}!`,
             icon: 'icone.png', // Adicione um ícone aqui, se quiser
             vibrate: [200, 100, 200], // Vibração curta
-            data: { treino },
         });
     });
 }
@@ -50,6 +73,5 @@ function enviarNotificacao(treino) {
 // Código do Service Worker incorporado para gerenciar notificações
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    // Exemplo de ação ao clicar na notificação, se desejado
-    console.log('Notificação clicada:', event.notification.data.treino);
+    console.log('Notificação clicada:', event.notification.body);
 });
