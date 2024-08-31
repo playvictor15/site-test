@@ -1,50 +1,28 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cronograma de Treinos com Alarmes</title>
+    <title>Meu Cronograma de Treinos</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Cronograma de Treino</h1>
-    
-    <form id="form-treino">
-        <label for="dia">Dia da Semana:</label>
-        <select id="dia" required>
-            <option value="Segunda">Segunda</option>
-            <option value="Terça">Terça</option>
-            <option value="Quarta">Quarta</option>
-            <option value="Quinta">Quinta</option>
-            <option value="Sexta">Sexta</option>
-            <option value="Sábado">Sábado</option>
-            <option value="Domingo">Domingo</option>
-        </select>
-
-        <label for="treino">Nome do Treino:</label>
-        <input type="text" id="treino" required placeholder="Ex: Cardio">
-
-        <label for="horario">Horário:</label>
-        <input type="time" id="horario" required>
-
-        <button type="submit">Adicionar Treino</button>
-    </form>
-
+    <div id="form">
+        <label for="dia">Dia:</label>
+        <input type="date" id="dia">
+        <label for="treino">Treino:</label>
+        <input type="text" id="treino">
+        <button onclick="adicionarTreino()">Adicionar</button>
+    </div>
     <table id="cronograma">
         <thead>
             <tr>
                 <th>Dia</th>
                 <th>Treino</th>
-                <th>Horário</th>
-                <th>Alarme</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            <!-- Treinos adicionados serão exibidos aqui -->
         </tbody>
     </table>
-
     <script src="script.js"></script>
 </body>
 </html>
