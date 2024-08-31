@@ -1,67 +1,117 @@
-window.addEventListener('DOMContentLoaded', () => {
-    const jsPDF = window.jspdf.jsPDF;
+// Carregar tarefas ao iniciar
+document.addEventListener('DOMContentLoaded', loadSchedules);
 
-    const toolbarOptions = [
-        [{ 'font': [] }, { 'size': [] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'script': 'sub' }, { 'script': 'super' }],
-        [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-        [{ 'direction': 'rtl' }],
-        [{ 'align': [] }],
-        [{ 'line-height': [] }],
-        ['link', 'image', 'video'],
-        ['clean']
-    ];
+function addSchedule() {
+    const taskName = document.getElementById('task').value.trim();
+    const taskTime = document.getElementById('time').value;
 
-    // Extend Parchment for line-height
-    const Parchment = Quill.import('parchment');
-    const LineHeightStyle = new Parchment.Attributor.Style('line-height', 'line-height', {
-        scope: Parchment.Scope.BLOCK,
-        whitelist: ['1', '1.5', '2', '2.5', '3']
-    });
-    Quill.register(LineHeightStyle, true);
+    if (taskName === '' || taskTime === '') {
+        showAlert('Preencha todos os campos!', 'warning');
+        return;
+    }
 
-    const quill = new Quill('#editor', {
-        modules: {
-            toolbar: toolbarOptions,
-            imageResize: {
-                displaySize: true
-            }
-        },
-        theme: 'snow',
-        placeholder: 'Comece a escrever seu documento aqui...'
-    });
+    const taskTimeDate = new Date(taskTime);
+    const now = new Date();
 
-    document.getElementById('saveBtn').addEventListener('click', () => {
-        const doc = new jsPDF();
-        const content = quill.getText(); // Get plain text content from Quill
-        const lines = content.split('\n'); // Split content into lines
+    if (taskTimeDate <= now) {
+        showAlert('Defina um horário futuro!', 'warning');
+        return;
+    }
 
-        let y = 10; // Starting y position for text in PDF
+    const task = {
+        id: Date.now(),
+        name: taskName,
+        time: taskTimeDate.toISOString(),
+    };
 
-        lines.forEach(line => {
-            doc.text(line, 10, y); // Add text line by line
-            y += 10; // Move y position down for next line
-        });
+    saveSchedule(task);
+    displayTask(task);
+    showAlert('Tarefa adicionada com sucesso!', 'success');
+}
 
-        doc.save('documento.pdf');
-    });
+function saveSchedule(task) {
+    const schedules = getSchedules();
+    schedules.push(task);
+    localStorage.setItem('schedules', JSON.stringify(schedules));
+}
 
-    document.getElementById('uploadBtn').addEventListener('click', () => {
-        document.getElementById('imageUploader').click();
-    });
+function getSchedules() {
+    return JSON.parse(localStorage.getItem('schedules')) || [];
+}
 
-    document.getElementById('imageUploader').addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const range = quill.getSelection();
-                quill.insertEmbed(range.index, 'image', e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-});
+function loadSchedules() {
+    const schedules = getSchedules();
+    schedules.forEach(displayTask);
+}
+
+function displayTask(task) {
+    const taskTimeDate = new Date(task.time);
+
+    const taskItem = document.createElement('li');
+    taskItem.className = 'list-group-item animate__animated animate__fadeInUp';
+    taskItem.textContent = `${task.name} - ${taskTimeDate.toLocaleString()}`;
+
+    const editButton = document.createElement('button');
+    editButton.className = 'btn btn-warning btn-sm';
+    editButton.textContent = 'Editar';
+    editButton.onclick = () => editTask(task, taskItem);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'btn btn-danger btn-sm';
+    deleteButton.textContent = 'Excluir';
+    deleteButton.onclick = () => deleteTask(task, taskItem);
+
+    taskItem.appendChild(editButton);
+    taskItem.appendChild(deleteButton);
+    document.getElementById('schedule-list').appendChild(taskItem);
+
+    setAlarm(task);
+}
+
+function editTask(task, taskItem) {
+    const newName = prompt('Edite o nome da tarefa:', task.name);
+    const newTime = prompt('Edite o horário da tarefa:', task.time);
+
+    if (!newName || !newTime) return;
+
+    task.name = newName;
+    task.time = new Date(newTime).toISOString();
+
+    const schedules = getSchedules().map(t => (t.id === task.id ? task : t));
+    localStorage.setItem('schedules', JSON.stringify(schedules));
+
+    taskItem.textContent = `${task.name} - ${new Date(task.time).toLocaleString()}`;
+    taskItem.appendChild(taskItem.querySelector('.btn-warning'));
+    taskItem.appendChild(taskItem.querySelector('.btn-danger'));
+}
+
+function deleteTask(task, taskItem) {
+    const schedules = getSchedules().filter(t => t.id !== task.id);
+    localStorage.setItem('schedules', JSON.stringify(schedules));
+    taskItem.remove();
+    showAlert('Tarefa excluída!', 'danger');
+}
+
+function setAlarm(task) {
+    const taskTimeDate = new Date(task.time);
+    const now = new Date();
+    const timeDifference = taskTimeDate - now;
+
+    setTimeout(() => {
+        alert(`Hora de: ${task.name}`);
+        document.getElementById('alarm-sound').play();
+        showAlert(`Hora de: ${task.name}`, 'info');
+    }, timeDifference);
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} animate__animated animate__fadeInDown`;
+    alertDiv.textContent = message;
+    document.body.prepend(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.classList.replace('animate__fadeInDown', 'animate__fadeOutUp');
+        alertDiv.addEventListener('animationend', () => alertDiv.remove());
+    }, 3000);
+}
