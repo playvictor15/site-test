@@ -1,28 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>Meu Cronograma de Treinos</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronograma de Treinos</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="form">
-        <label for="dia">Dia:</label>
-        <input type="date" id="dia">
-        <label for="treino">Treino:</label>
-        <input type="text" id="treino">
-        <button onclick="adicionarTreino()">Adicionar</button>
-    </div>
+    <h1>Cronograma de Treinos</h1>
     <table id="cronograma">
         <thead>
             <tr>
                 <th>Dia</th>
                 <th>Treino</th>
-                <th>Ações</th>
+                <th>Hora do Alarme</th>
+                <th>Ação</th>
             </tr>
         </thead>
         <tbody>
+            <!-- Treinos serão adicionados aqui via JavaScript -->
         </tbody>
     </table>
+    <button id="adicionarTreino">Adicionar Treino</button>
+
     <script src="script.js"></script>
 </body>
 </html>
